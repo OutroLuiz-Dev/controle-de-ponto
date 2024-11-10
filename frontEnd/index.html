@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Ponto</title>
+    <style>
+   
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4A00E0, #8E2DE2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: #fff;
+        }
+
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+    
+        label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            display: block;
+            color: #ddd;
+        }
+
+
+        input {
+            width: 96%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+        input::placeholder {
+            color: #ddd;
+        }
+
+    
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+    
+        .saida-button {
+            background-color: #dc3545;
+        }
+
+        .saida-button:hover {
+            background-color: #c82333;
+        }
+
+     
+        .result {
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            color: #ddd;
+        }
+
+     
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ddd;
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>Controle de Ponto</h2>
+
+    <div class="container">
+        <h3>Cadastrar Funcionário</h3>
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" placeholder="Digite o nome do funcionário">
+        <label for="matricula">Matrícula:</label>
+        <input type="text" id="matricula" placeholder="Digite a matrícula do funcionário">
+        <button onclick="cadastrarFuncionario()">Cadastrar</button>
+        <div id="resultCadastro" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h3>Registrar Entrada</h3>
+        <label for="entradaId">ID do Funcionário:</label>
+        <input type="number" id="entradaId" placeholder="Digite o ID do funcionário">
+        <button onclick="registrarEntrada()">Registrar Entrada</button>
+        <div id="resultEntrada" class="result"></div>
+    </div>
+
+ 
+
+    <div class="container">
+        <h3>Registrar Saída</h3>
+        <label for="saidaId">ID do Registro:</label>
+        <input type="number" id="saidaId" placeholder="Digite o ID do registro">
+        <button class="saida-button" onclick="registrarSaida()">Registrar Saída</button>
+        <div id="resultSaida" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h3>Listar Registros</h3>
+        <button onclick="listarRegistros()">Listar Todos os Registros</button>
+        <table id="tabelaRegistros">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Funcionário</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+        </table>
+    </div>
+
+
+    <script>
+        const apiUrl = 'http://localhost:8080/api/pontos';
+
+        async function cadastrarFuncionario() {
+            const nome = document.getElementById('nome').value;
+            const matricula = document.getElementById('matricula').value;
+
+            const response = await fetch(`${apiUrl}/funcionario`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, matricula })
+            });
+
+            const data = await response.json();
+            document.getElementById('resultCadastro').innerText = response.ok ?
+                `Funcionário ${data.nome} cadastrado com ID ${data.id}` :
+                'Erro ao cadastrar funcionário';
+        }
+
+        async function registrarEntrada() {
+            const id = document.getElementById('entradaId').value;
+            const response = await fetch(`${apiUrl}/entrada/${id}`, { method: 'POST' });
+
+            if (response.ok) {
+                document.getElementById('resultEntrada').innerText = 'Entrada registrada com sucesso!';
+            } else {
+                document.getElementById('resultEntrada').innerText = 'Erro ao registrar entrada';
+            }
+        }
+
+        async function registrarSaida() {
+    const id = document.getElementById('saidaId').value;  
+    if (!id) {
+        document.getElementById('resultSaida').innerText = 'Por favor, forneça um ID válido.';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${apiUrl}/saida/${id}`, { 
+            method: 'PUT', 
+            headers: { 
+                'Content-Type': 'application/json'  
+            }
+        });
+
+        if (response.ok) {
+            document.getElementById('resultSaida').innerText = 'Saída registrada com sucesso!';
+        } else {
+            const errorMessage = await response.text();  
+            document.getElementById('resultSaida').innerText = `Erro ao registrar saída: ${errorMessage}`;
+        }
+    } catch (error) {
+        console.error("Erro ao fazer a requisição:", error); 
+        document.getElementById('resultSaida').innerText = 'Erro ao registrar saída: ' + error.message;
+    }
+}
+
+        async function listarRegistros() {
+            const response = await fetch(apiUrl);
+
+            if (response.ok) {
+                const registros = await response.json();
+                const tabela = document.getElementById('corpoTabela');
+                tabela.innerHTML = '';
+
+                registros.forEach(registro => {
+                    const row = `<tr>
+                        <td>${registro.id}</td>
+                        <td>${registro.funcionario.nome}</td>
+                        <td>${registro.horarioEntrada ?? 'N/A'}</td>
+                        <td>${registro.horarioSaida ?? 'N/A'}</td>
+                    </tr>`;
+                    tabela.innerHTML += row;
+                });
+            } else {
+                alert('Erro ao listar registros');
+            }
+        }
+    </script>
+</body>
+</html>
